@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES="7" python val.py -d="7" -e="/home/xiaozhongyu/CV/acm_mm/dl_re/pretrained/pre/mitb4-rgb-52.31.pth" --save_path="./eval_result/"

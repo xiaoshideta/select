@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES="5" python test.py -d="5" -e="/home/xiaozhongyu/CV/acm_mm/RGBX_kl_re_initial/pretrained/pre/epoch-231-rgb-49.23.pth" --save_path="./eval_result/" --losse loss1
