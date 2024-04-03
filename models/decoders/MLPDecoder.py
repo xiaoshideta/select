@@ -112,7 +112,7 @@ def load_dualpath_model(model, model_file):
     # breakpoint()
     del state_dict
 
-class DecoderHead2(nn.Module):
+class DecoderHead_hint(nn.Module):
     def __init__(self,
                  in_channels=[64, 128, 320, 512],
                  num_classes=40,
@@ -120,14 +120,16 @@ class DecoderHead2(nn.Module):
                  norm_layer=nn.BatchNorm2d,
                  embed_dim=768,
                  align_corners=False,
-                 losses=''):
+                 losses='',
+                 lambda_mgd=0.75):
         
-        super(DecoderHead2, self).__init__()
+        super(DecoderHead_hint, self).__init__()
         self.num_classes = num_classes
         self.dropout_ratio = dropout_ratio
         self.align_corners = align_corners
         self.losses = losses
         self.in_channels = in_channels
+        self.lambda_mask = lambda_mgd
         
         if dropout_ratio > 0:
             self.dropout = nn.Dropout2d(dropout_ratio)
@@ -143,7 +145,7 @@ class DecoderHead2(nn.Module):
         self.linear_c1 = MLP(input_dim=c1_in_channels, embed_dim=embedding_dim)
          # 根据 losses 的内容动态创建 conv 层
         for loss_name in self.losses:
-            setattr(self, f"conv_{loss_name}", nn.Conv2d(eval(f"c{loss_name[-1]}_in_channels"), eval(f"c{loss_name[-1]}_in_channels"), kernel_size=1))
+            setattr(self, f"align_{loss_name}", nn.Conv2d(eval(f"c{loss_name[-1]}_in_channels"), eval(f"c{loss_name[-1]}_in_channels"), kernel_size=1))
         # self.conv_c4 = nn.Conv2d(c4_in_channels, c4_in_channels, kernel_size=1)
         # self.conv_c3 = nn.Conv2d(c3_in_channels, c3_in_channels, kernel_size=1)
         # self.conv_c2 = nn.Conv2d(c2_in_channels, c2_in_channels, kernel_size=1)
@@ -181,7 +183,7 @@ class DecoderHead2(nn.Module):
 
         # 根据 losses 的内容动态使用 conv 层
         for loss_name in self.losses:
-            conv_layer = getattr(self, f"conv_{loss_name}")
+            conv_layer = getattr(self, f"align_{loss_name}")
             b = conv_layer(eval(f"c{loss_name[-1]}"))
             # print(b.shape)
             outs.append(b)
@@ -199,7 +201,7 @@ class DecoderHead2(nn.Module):
 #     "Load model, Time usage:\n\tIO: {}, initialize parameters: {}".format(
 #         t_ioend - t_start, t_end - t_ioend))
 
-class DecoderHead3(nn.Module):
+class DecoderHead_mask(nn.Module):
     def __init__(self,
                  in_channels=[64, 128, 320, 512],
                  num_classes=40,
@@ -211,7 +213,7 @@ class DecoderHead3(nn.Module):
                  lambda_mgd=0.75,
                  losses=''):
         
-        super(DecoderHead3, self).__init__()
+        super(DecoderHead_mask, self).__init__()
         self.num_classes = num_classes
         self.dropout_ratio = dropout_ratio
         self.align_corners = align_corners
