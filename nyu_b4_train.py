@@ -16,6 +16,8 @@ from nyu_b4_config import config
 from dataloader.dataloader_nyu import get_train_loader, ValPre
 from models.builder import EncoderDecoder as segmodel
 from models.builder import EncoderDecoder2 as segmodel2
+from models.builder import EncoderDecoder3 as segmodel3
+
 from dataloader.RGBXDataset import RGBXDataset
 from utils.init_func import init_weight, group_weight
 from utils.lr_policy import WarmUpPolyLR
@@ -31,7 +33,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--distillation_alpha', type=float, default=1, help='Description of new argument')
 parser.add_argument('--distillation_beta', type=float, default=0.1, help='Description of new argument')
 parser.add_argument('--distillation_single', type=int, default=1, help='Description of new argument')
-parser.add_argument('--distillation_single2', type=int, default=0, help='Description of new argument')
+
+parser.add_argument('--mask_single', type=str, default='hint', help='Description of the string variable')
+
 parser.add_argument('--distillation_flag', type=int, default=0, help='Description of new argument')
 
 parser.add_argument('--lambda_mask', type=float, default=0.75, help='Description of new argument')
@@ -201,7 +205,12 @@ with Engine(custom_parser=parser) as engine:
         BatchNorm2d2 = nn.BatchNorm2d
 
     # CMX分支
-    model = segmodel(cfg=config, criterion=criterion, norm_layer=BatchNorm2d, load=True, decode_init=0, losses=args.losses, lambda_mask=args.lambda_mask)
+    if args.mask_single == "mask_hint":
+        # mask
+        model = segmodel(cfg=config, criterion=criterion, norm_layer=BatchNorm2d, load=True, decode_init=0, losses=args.losses, lambda_mask=args.lambda_mask)
+    else:
+        # hiny
+        model = segmodel3(cfg=config, criterion=criterion, norm_layer=BatchNorm2d, load=True, decode_init=0, losses=args.losses, lambda_mask=args.lambda_mask)
     # print(model)
     # print("model", model.backbone.patch_embed1.proj.weight)
     # print("model", model.backbone.extra_patch_embed1.proj.weight)
@@ -286,6 +295,7 @@ with Engine(custom_parser=parser) as engine:
     print("distillation_beta:", args.distillation_beta)
     print("lambda_mask:", args.lambda_mask)
     print("select_method:", args.select)
+    print("method:", args.mask_single)
 
     for epoch in range(engine.state.epoch, config.nepochs + 1):
         # if epoch == 400: 
@@ -379,7 +389,7 @@ with Engine(custom_parser=parser) as engine:
                 elif args.select == 'min':
                     feature_loss = torch.where(torch.eq(selected_loss_tensor, min_loss_value), selected_loss_tensor * args.distillation_beta, selected_loss_tensor * 0.0).sum()
                 else:
-                    feature_loss = 0.0
+                    feature_loss = torch.where(torch.eq(selected_loss_tensor, max_loss_value), selected_loss_tensor * 0.0, selected_loss_tensor * 0.0).sum()
                 # if args.select == 'max':
 
                 #     if torch.eq(loss_value, max_loss_value):
