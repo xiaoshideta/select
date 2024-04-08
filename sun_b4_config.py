@@ -86,7 +86,7 @@ C.norm_std = np.array([0.229, 0.224, 0.225])
 """ Settings for network, this would be different for each kind of model"""
 C.backbone = 'mit_b4' # Remember change the path below.
 C.pretrained_model = C.root_dir + '/pretrained/segformer/mit_b4.pth'
-C.pretrained_model1 = C.root_dir + '/pretrained/pre/mitb4-rgb-52.31.pth'
+C.pretrained_model1 = C.root_dir + '/pretrained/pre/sun-b4-49.11.pth'
 
 C.decoder = 'MLPDecoder' #ham
 C.decoder_embed_dim = 512
@@ -97,7 +97,7 @@ C.lr = 8e-5
 C.lr_power = 0.9
 C.momentum = 0.9
 C.weight_decay = 0.01
-C.batch_size = 8 # 16
+C.batch_size = 16
 C.nepochs = 300
 C.niters_per_epoch = C.num_train_imgs // C.batch_size  + 1
 C.num_workers = 16
